@@ -1,26 +1,66 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <main-screen
+    v-if="statusMatch === 'default'"
+    @onStart="onHandleBeforeStart($event)"
+  />
+  <interac-screen
+    v-if="statusMatch === 'match'"
+    :cardContent="settings.cardContent"
+    @onFinish="onGetResult"
+  />
+  <result-screen
+    v-if="statusMatch === 'result'"
+    :timer="timer"
+    @onStartAgain="statusMatch = 'default'"
+  />
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import MainScreen from "./components/MainScreen.vue";
+import InteracScreen from "./components/InteracScreen.vue";
+import ResultScreen from "./components/ResultScreen.vue";
+import { shuffled } from "./utils/array.js";
 
 export default {
   name: "App",
   components: {
-    HelloWorld,
+    MainScreen,
+    InteracScreen,
+    ResultScreen,
+  },
+  data() {
+    return {
+      settings: {
+        totalOfBlocks: 0,
+        cardContent: [],
+        startedAt: null,
+      },
+      statusMatch: "default",
+      timer: 0,
+    };
+  },
+  methods: {
+    onHandleBeforeStart(config) {
+      console.log("running", config);
+      this.settings.totalOfBlocks = config.totalOfBlocks;
+
+      const firstCard = Array.from(
+        { length: this.settings.totalOfBlocks / 2 },
+        (_, i) => i + 1
+      );
+      const secondCard = [...firstCard];
+      const cards = [...firstCard, ...secondCard];
+
+      this.settings.cardContent = shuffled(shuffled(shuffled(shuffled(cards))));
+
+      this.settings.startedAt = new Date().getTime();
+
+      this.statusMatch = "match";
+    },
+    onGetResult() {
+      this.timer = new Date().getTime() - this.settings.startedAt;
+      this.statusMatch = "result";
+    },
   },
 };
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
